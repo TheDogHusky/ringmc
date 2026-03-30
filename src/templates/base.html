@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %} {% endblock %} - RingMC</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="{{ url_for('static', filename='script/main.js') }}"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -21,5 +22,9 @@
     <footer class="footer">
         <p>Fait avec amour par Owen, Adam et Kayle. Projet <a href="https://github.com/TheDogHusky/RingMC" target="_blank">Open Source</a></p>
     </footer>
+
+    <div class="modals">
+        {% include 'components/article_form.html' %}
+    </div>
 </body>
 </html>

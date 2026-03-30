@@ -1,0 +1,26 @@
+<div class="modal article-form-modal" data-name="new-article-modal">
+    <div class="modal-content">
+        <button class="close-modal close-btn btn btn-icon" data-target="new-article-modal">&times;</button>
+        <h2>Ajouter un nouvel article</h2>
+        <form action="/articles" id="article-form" class="article-form" method="post">
+            <div>
+                <label for="title">Titre de l'article</label>
+                <input type="text" name="title" required>
+            </div>
+            <div>
+                <label for="author">Auteur de l'article (pseudo mc)</label>
+                <input type="text" name="author" required>
+            </div>
+            <div>
+                <label for="content">Contenu de l'article</label>
+                <textarea name="content" required></textarea>
+            </div>
+            <div>
+                <label for="prices">Prix de l'article</label>
+                <button type="button" id="add-price-btn" class="btn btn-secondary">Ajouter un objet</button>
+                <ul class="prices"></ul>
+            </div>
+            <button type="submit" class="btn">Nouvel article</button>
+        </form>
+    </div>
+</div>

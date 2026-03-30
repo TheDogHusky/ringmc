@@ -11,7 +11,14 @@
                 {% for article in articles %}
                     <div class="article-card">
                         <h3>{{ article.title }}</h3>
-                        <p>{{ article.content }}</p>
+                        <div>
+                            <p>{{ article.content }}</p>
+                            <div class="article-prices">
+                                {% for price in article.prices %}
+                                    <p>{{ price.item }} x{{ price.value }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                         <a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="btn">Voir l'article</a>
                     </div>
                 {% endfor %}
@@ -19,6 +26,9 @@
         {% else %}
             <p>Aucun article disponible pour le moment.</p>
         {% endif %}
+        <div class="new article">
+            <button class="btn btn-primary open-modal" data-target="new-article-modal">Ajouter un article</button>
+        </div>
     </section>
     <section class="container mh bg-normal">
         <h2>Derniers builds</h2>
