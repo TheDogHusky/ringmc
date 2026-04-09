@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="container mh bg-elevated">
+        <div class="article-details">
+            <h1 class="article-title">{{ article.title }} - par {{article.author }}</h1>
+            {% if article.image_url %}
+                <img src="{{ article.image_url }}" alt="Image de {{ article.title }}" class="article-image">
+            {% endif %}
+            <p class="article-content">{{ article.content }}</p>
+            <div class="prices">
+                <h2>Prix demandé(s)</h2>
+                <div class="article-prices">
+                    {% for price in article.prices %}
+                        <p>{{ price.item }} <span class="article-price">x{{ price.value }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="container mh bg-elevated">
+        <h1>{{ build.name }}</h1>
+        {% if build.images %}
+            <div class="build-images">
+                {% for image in build.images %}
+                    <img src="{{ url_for('static', filename='uploads/builds/' ~ image) }}" alt="Image du build {{ build.name }}" class="build-image">
+                {% endfor %}
+            </div>
+        {% endif %}
+        <p class="build-content">{{ build.description }}</p>
+    </section>
+{% endblock %}

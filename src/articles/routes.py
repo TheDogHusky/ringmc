@@ -1,29 +1,43 @@
-from flask import request, render_template
+from flask import request, render_template, g
+from pydantic import ValidationError
 from . import articles
-from ..models.articles import Article
+from ..models.articles import Article, ArticleSchema
 from ..extensions import db
 
 @articles.route('/', methods=['GET', 'POST'])
 def articles_index():
     if request.method == 'POST':
-        json_form = request.get_json()
-        title = json_form.get('title') if json_form else request.form.get('title')
-        content = json_form.get('content') if json_form else request.form.get('content')
-        prices = json_form.get('prices') if json_form else None
-        image_url = json_form.get('image_url') if json_form else request.form.get('image_url')
-        category = json_form.get('category') if json_form else request.form.get('category')
-        author = json_form.get('author') if json_form else request.form.get('author')
+        data = None
 
-        # TODO: Add validation for title, content, and prices
-        if not title or not content or not prices or not author:
-            return "All fields are required", 400
+        try:
+            data = ArticleSchema(**request.get_json())
+        except ValidationError as e:
+            return {"error": e.errors()}, 400
+        
+        if data:
+            article = Article(**data.model_dump())
+            db.session.add(article)
+            db.session.commit()
+        else:
+            return {"error": "Invalid data"}, 400
 
-        article = Article(title=title, content=content, prices=prices, image_url=image_url, category=category, author=author)
-        db.session.add(article)
-        db.session.commit()
+    sort = request.args.get('sort', 'desc')
+    category = request.args.get('category', None)
+    if sort not in ['asc', 'desc']:
+        sort = 'desc'
+    if category not in [None, 'Service', 'Item', 'Autre']:
+        category = None
 
-    articles = db.session.execute(db.select(Article)).scalars().all()
-    return render_template('articles/index.html', articles=articles)
+    articles = None
+    if category:
+        articles = db.session.execute(
+            db.select(Article).where(Article.category == category).order_by(Article.id.asc() if sort == 'asc' else Article.id.desc())
+        ).scalars().all()
+    else:
+        articles = db.session.execute(
+            db.select(Article).order_by(Article.id.asc() if sort == 'asc' else Article.id.desc())
+        ).scalars().all()
+    return render_template('articles/index.html', articles=articles, sort=sort, category=category)
 
 @articles.route('/<int:article_id>')
 def article_detail(article_id):
@@ -31,3 +45,14 @@ def article_detail(article_id):
     if not article:
         return "Article not found", 404
     return render_template('articles/detail.html', article=article)
+
+@articles.route('/<int:article_id>', methods=['DELETE'])
+def delete_article(article_id):
+    if not g.is_admin:
+        return {"error": "Unauthorized"}, 403
+    article = db.session.get(Article, article_id)
+    if not article:
+        return "Article not found", 404
+    db.session.delete(article)
+    db.session.commit()
+    return {"message": "Article deleted"}, 200

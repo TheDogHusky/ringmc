@@ -1,0 +1,25 @@
+<div class="modal article-form-modal" data-name="new-build-modal">
+    <div class="modal-content">
+        <button class="close-modal close-btn btn btn-icon" data-target="new-build-modal">&times;</button>
+        <h2>Ajouter un nouveau build</h2>
+        <form enctype="multipart/form-data" action="/builds/create" id="build-form" class="article-form" method="post">
+            <div>
+                <label for="name">Nom du build</label>
+                <input type="text" name="name" required>
+            </div>
+            <div>
+                <label for="author">Auteur du build (pseudo mc)</label>
+                <input type="text" name="author" required>
+            </div>
+            <div>
+                <label for="description">Description du build</label>
+                <textarea name="description" required></textarea>
+            </div>
+            <div>
+                <label for="images">Images</label>
+                <input type="file" name="images" multiple accept="image/*">
+            </div>
+            <button type="submit" class="btn">Nouveau build</button>
+        </form>
+    </div>
+</div>

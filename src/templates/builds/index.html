@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="container mh bg-elevated">
+        <h1>Derniers builds</h1>
+        {% if builds %}
+            <div class="builds-list">
+                {% for build in builds %}
+                    <div class="build-card">
+                        {% if build.image_url %}
+                            <div class="build-image-container">
+                                <img src="{{ build.image_url }}" alt="Image de {{ build.title }}" class="build-image">
+                            </div>
+                        {% endif %}
+                        <div class="build-content">
+                            <h3 class="build-title">{{ build.name }}</h3>
+                            <div>
+                                <p class="build-content-p">{{ build.content }}</p>
+                                <div class="build-prices">
+                                    {% for price in build.prices %}
+                                        <p>{{ price.item }} x{{ price.value }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('builds.build_detail', build_id=build.id) }}" class="btn btn-primary">Voir le build</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Aucun build disponible pour le moment.</p>
+        {% endif %}
+        <div class="new build">
+            <button class="btn btn-primary open-modal" data-target="new-build-modal">Ajouter un build</button>
+        </div>
+    </section>
+{% endblock %}

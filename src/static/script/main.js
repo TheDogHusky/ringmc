@@ -13,6 +13,7 @@ function validateForm(data) {
     }
 
     if (data.prices) {
+        console.log(data.prices);
         try {
             const prices = JSON.parse(data.prices);
             if (!Array.isArray(prices)) {
@@ -43,13 +44,16 @@ function postArticle(event) {
     event.preventDefault();
 
     const form = event.target;
+    const pricesList = document.querySelector('.prices');
+    const prices = pricesList.getAttribute('data-prices');
     const formData = new FormData(form);
     const data = {
         title: formData.get('title'),
         content: formData.get('content'),   
         category: formData.get('category'),
-        prices: formData.get('prices') || '[]',
-        image_url: formData.get('image_url')
+        prices: prices || [],
+        image_url: formData.get('image'),
+        author: formData.get('author')
     };
 
     const result = validateForm(data);
@@ -66,13 +70,34 @@ function postArticle(event) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
-    }).then(response => {
+    }).then(async response => {
         if (response.ok) {
             alert('Article publié avec succès !');
             form.reset();
-        } else {
-            alert('Erreur lors de la publication de l\'article.');
+            window.location.reload();
+            return;
         }
+        let message = 'Erreur lors de la publication de l\'article.';
+        try {
+            const body = await response.json();
+
+            if (Array.isArray(body.error)) {
+                const details = body.error.map((err) => {
+                    const field = Array.isArray(err.loc) ? err.loc.join('.') : 'unknown';
+                    const text = err.msg || JSON.stringify(err);
+                    return '- ' + field + ' : ' + text;
+                });
+                message += '\n' + details.join('\n');
+            } else if (typeof body.error === 'string') {
+                message += '\n- ' + body.error;
+            } else {
+                message += '\n- ' + response.status + ' ' + response.statusText;
+            }
+        } catch {
+            message += '\n- ' + response.status + ' ' + response.statusText;
+        }
+
+        alert(message);
     }).catch(error => {
         console.error('Error:', error);
         alert('Erreur lors de la publication de l\'article.');
@@ -98,23 +123,26 @@ function init_price_input(addBtn, list, prices) {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.textContent = '×';
-        removeBtn.classList.add('btn', 'btn-danger');
+        removeBtn.classList.add('btn', 'btn-danger', 'font-basic');
 
         div.appendChild(itemInput);
         div.appendChild(quantityInput);
         div.appendChild(removeBtn);
         list.appendChild(div);
         prices.push({ item: '', value: 0 });
+        list.setAttribute('data-prices', JSON.stringify(prices));
 
         function updatePrice() {
             const index = Array.from(list.children).indexOf(div);
             prices[index] = { item: itemInput.value, value: parseInt(quantityInput.value) || 0 };
+            list.setAttribute('data-prices', JSON.stringify(prices));
         }
 
         removeBtn.addEventListener('click', () => {
             const index = Array.from(list.children).indexOf(div);
             prices.splice(index, 1);
             div.remove();
+            list.setAttribute('data-prices', JSON.stringify(prices));
         });
 
         itemInput.addEventListener('input', updatePrice);
@@ -125,6 +153,8 @@ function init_price_input(addBtn, list, prices) {
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('article-form');
     const openModalButtons = document.querySelectorAll('.open-modal');
+    const actionButtons = document.querySelectorAll('.btn-action');
+    const sortForm = document.querySelector('.sort-form');
 
     const addPriceBtn = document.getElementById('add-price-btn');
     const pricesList = document.querySelector('.prices');
@@ -158,4 +188,66 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     form.addEventListener('submit', postArticle);
+
+    actionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const action = button.getAttribute('data-action');
+            const articleId = button.getAttribute('data-id');
+
+            switch (action) {
+                case 'delete-article':
+                    if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
+                        fetch(`/articles/${articleId}`, {
+                            method: 'DELETE'
+                        }).then(response => {
+                            if (response.ok) {
+                                alert('Article supprimé avec succès !');
+                                window.location.reload();
+                            } else {
+                                if (response.status === 403) {
+                                    alert('Vous n\'avez pas la permission de supprimer cet article.');
+                                    return;
+                                }
+                                alert('Erreur lors de la suppression de l\'article.');
+                            }
+                        }).catch(error => {
+                            console.error('Error:', error);
+                            alert('Erreur lors de la suppression de l\'article.');
+                        });
+                    }
+                    break;
+                case 'delete-build':
+                    if (confirm('Êtes-vous sûr de vouloir supprimer cette construction ?')) {
+                        fetch(`/builds/${articleId}`, {
+                            method: 'DELETE'
+                        }).then(response => {                            if (response.ok) {
+                                alert('Construction supprimée avec succès !');
+                                window.location.reload();
+                            } else {
+                                if (response.status === 403) {
+                                    alert('Vous n\'avez pas la permission de supprimer cette construction.');
+                                    return;
+                                }
+                                alert('Erreur lors de la suppression de la construction.');
+                            }
+                        }).catch(error => {
+                            console.error('Error:', error);
+                            alert('Erreur lors de la suppression de la construction.');
+                        });
+                    }
+                    break;
+                default:
+                    alert('Action inconnue : ' + action);
+            }
+        });
+    });
+
+    sortForm.addEventListener('change', () => {
+        const category = sortForm.elements['category'].value;
+        const order = sortForm.elements['sort'].value;
+        const params = new URLSearchParams(window.location.search);
+        params.set('category', category);
+        params.set('sort', order);
+        window.location.search = params.toString();
+    });
 });

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="container mh">
+        <h1 class="super-title">Accès refusé</h1>
+        <form method="post" action="/login" class="form">
+            <div>
+                <label for="password">Mot de passe</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Se connecter</button>
+        </form>
+    </section>
+{% endblock %}

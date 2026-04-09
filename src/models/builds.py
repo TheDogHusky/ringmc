@@ -1,28 +1,34 @@
-from sqlalchemy import Integer, String, event
-from sqlalchemy.orm import declarative_base, mapped_column
+from sqlalchemy import JSON, DateTime, Integer, String, event, func
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column
 from datetime import datetime
 from dateutil import tz
 from ..extensions import db
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
-# TODO: finir, et faire upload des images (figure it out)
+# TODO: et faire upload des images
 class Build(db.Model):
     __tablename__ = 'builds'
-    id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(String)
-    description = mapped_column(String)
-    images = mapped_column(String) # sera serialized en JSON pour stocker la liste des URLs des images du build
-    # Date de publication, automatique
-    created = mapped_column(String)
-    modified = mapped_column(String)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    author: Mapped[str] = mapped_column(String, nullable=False)
+    
+    images: Mapped[List[str]] = mapped_column(JSON, default=list)
+    
+    created: Mapped[str] = mapped_column(DateTime, server_default=func.now())
+    modified: Mapped[str] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
-# https://stackoverflow.com/questions/13978554
-@event.listen(Build, 'before_insert')
-def update_created_modified_on_create_listener(mapper, connection, target):
-  """ Event listener that runs before a record is updated, and sets the create/modified field accordingly."""
-  target.created = datetime.utcnow()
-  target.modified = datetime.utcnow()
+class BuildSchema(BaseModel):
+    name: str = Field(..., min_length=3, max_length=100)
+    description: str = Field(..., min_length=10)
+    author: str = Field(..., min_length=3, max_length=18)
+    
+    images: List[str] = Field(default_factory=list, description="Liste des noms de fichiers")
+    
+    created: Optional[str] = None
+    modified: Optional[str] = None
 
-@event.listen(Build, 'before_update')
-def update_modified_on_update_listener(mapper, connection, target):
-  """ Event listener that runs before a record is updated, and sets the modified field accordingly."""
-  target.modified = datetime.now(tz.tzlocal())
+    class Config:
+        from_attributes = True

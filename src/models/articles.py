@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional
 
-from sqlalchemy import Integer, String, event, JSON
+from sqlalchemy import DateTime, Integer, String, event, JSON, func
 from sqlalchemy.orm import declarative_base, mapped_column, validates, Mapped
 from datetime import datetime
 from dateutil import tz
+from pydantic import BaseModel, Field
 
 from src.types import PriceEntry
 from ..extensions import db
@@ -23,8 +24,8 @@ class Article(db.Model):
     # Catégorie, optionel
     category = mapped_column(String, nullable=True)
     # Date de publication, automatique
-    created = mapped_column(String)
-    modified = mapped_column(String)
+    created: Mapped[str] = mapped_column(DateTime, server_default=func.now())
+    modified: Mapped[str] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     @validates('prices')
     def validate_prices(self, key, prices):
@@ -42,14 +43,23 @@ class Article(db.Model):
                 
         return prices
 
-# https://stackoverflow.com/questions/13978554
-@event.listens_for(Article, 'before_insert')
-def update_created_modified_on_create_listener(mapper, connection, target):
-  """ Event listener that runs before a record is updated, and sets the create/modified field accordingly."""
-  target.created = datetime.utcnow()
-  target.modified = datetime.utcnow()
+class PriceEntrySchema(BaseModel):
+    item: str = Field(..., min_length=1, description="Nom de l'item MC")
+    value: int = Field(..., gt=0, description="Quantité (doit être > 0)")
 
-@event.listens_for(Article, 'before_update')
-def update_modified_on_update_listener(mapper, connection, target):
-  """ Event listener that runs before a record is updated, and sets the modified field accordingly."""
-  target.modified = datetime.now(tz.tzlocal())
+class ArticleSchema(BaseModel):
+    title: str = Field(..., min_length=3, max_length=100)
+    content: str = Field(..., min_length=10)
+    author: str = Field(..., min_length=3, max_length=18)
+    
+    prices: List[PriceEntrySchema] = []
+    
+    # Optional fields
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    
+    created: Optional[str] = None
+    modified: Optional[str] = None
+
+    class Config:
+        from_attributes = True

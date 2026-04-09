@@ -16,6 +16,19 @@
                 <textarea name="content" required></textarea>
             </div>
             <div>
+                <label for="category">Catégorie</label>
+                <select name="category">
+                    <option value="">Aucune</option>
+                    <option value="Service">Service</option>
+                    <option value="Item">Item</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+            <div>
+                <label for="image">Image (URL)</label>
+                <input type="text" name="image">
+            </div>
+            <div>
                 <label for="prices">Prix de l'article</label>
                 <button type="button" id="add-price-btn" class="btn btn-secondary">Ajouter un objet</button>
                 <ul class="prices"></ul>

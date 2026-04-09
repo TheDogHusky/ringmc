@@ -10,10 +10,15 @@
 <body>
     <nav class="navbar">
         <div class="navbar-brand">
-            <a href="{{ url_for('index.index') }}">RingMC</a>
+            <a href="{{ url_for('index.home') }}">RingMC</a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="{{ url_for('index.index') }}">Accueil</a></li>  
+            <li><a href="{{ url_for('index.home') }}">Accueil</a></li>
+            <li><a href="{{ url_for('articles.articles_index') }}">Articles</a></li>
+            <li><a href="{{ url_for('builds.builds_index') }}">Builds</a></li>
+            {% if logged_in %}
+            <li><a href="{{ url_for('index.logout') }}">Déconnexion</a></li>
+            {% endif %}
         </ul>
     </nav>
     <main>
@@ -25,6 +30,7 @@
 
     <div class="modals">
         {% include 'components/article_form.html' %}
+        {% include 'components/build_form.html' %}
     </div>
 </body>
 </html>
